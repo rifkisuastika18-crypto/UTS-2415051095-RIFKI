@@ -23,6 +23,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
     if (updatedTask != null) {
       setState(() {
         final index = tasks.indexOf(task);
+
         if (index != -1) {
           tasks[index] = updatedTask;
         }
@@ -39,9 +40,15 @@ class _TaskListScreenState extends State<TaskListScreen> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: tasks.isEmpty
-          ? const Center(child: Text('Belum ada tugas'))
-          : ListView.builder(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          if (tasks.isEmpty) {
+            return const Center(child: Text('Belum ada tugas'));
+          }
+
+          // Tampilan HP menggunakan ListView
+          if (constraints.maxWidth < 700) {
+            return ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: tasks.length,
               itemBuilder: (context, index) {
@@ -49,7 +56,29 @@ class _TaskListScreenState extends State<TaskListScreen> {
 
                 return TaskCard(task: task, onTap: () => openTaskDetail(task));
               },
+            );
+          }
+
+          // Tampilan tablet menggunakan GridView
+          final columnCount = constraints.maxWidth >= 1000 ? 3 : 2;
+
+          return GridView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: tasks.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columnCount,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.55,
             ),
+            itemBuilder: (context, index) {
+              final task = tasks[index];
+
+              return TaskCard(task: task, onTap: () => openTaskDetail(task));
+            },
+          );
+        },
+      ),
     );
   }
 }
