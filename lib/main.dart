@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'providers/quote_provider.dart';
+import 'repositories/quote_repository.dart';
+import 'services/quote_service.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/task_list_screen.dart';
@@ -6,7 +11,14 @@ import 'screens/add_task_screen.dart';
 import 'screens/profile_screen.dart';
 
 void main() {
-  runApp(const TaskMateApp());
+  final repository = QuoteRepository(quoteService: QuoteService());
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => QuoteProvider(repository: repository)..fetchQuotes(),
+      child: const TaskMateApp(),
+    ),
+  );
 }
 
 class TaskMateApp extends StatelessWidget {
