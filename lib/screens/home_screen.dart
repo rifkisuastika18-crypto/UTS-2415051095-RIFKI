@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/quote_provider.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/upcoming_task_card.dart';
+import '../providers/task_provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -60,29 +61,57 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 15),
 
-              const Row(
-                children: [
-                  Expanded(
-                    child: SummaryCard(
-                      title: 'Total Tugas',
-                      value: '12',
-                      icon: Icons.assignment,
-                      color: Colors.blue,
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: SummaryCard(
-                      title: 'Dikerjakan',
-                      value: '5',
-                      icon: Icons.pending_actions,
-                      color: Colors.orange,
-                    ),
-                  ),
-                ],
+              Consumer<TaskProvider>(
+                builder: (context, taskProvider, child) {
+                  return Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SummaryCard(
+                              title: 'Total Tugas',
+                              value: taskProvider.totalTasks.toString(),
+                              icon: Icons.assignment,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: SummaryCard(
+                              title: 'Dikerjakan',
+                              value: taskProvider.inProgressTasks.toString(),
+                              icon: Icons.pending_actions,
+                              color: Colors.orange,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SummaryCard(
+                              title: 'Selesai',
+                              value: taskProvider.completedTasks.toString(),
+                              icon: Icons.check_circle,
+                              color: Colors.green,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: SummaryCard(
+                              title: 'Belum Selesai',
+                              value: taskProvider.pendingTasks.toString(),
+                              icon: Icons.warning,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
               ),
-
-              const SizedBox(height: 12),
 
               const Row(
                 children: [

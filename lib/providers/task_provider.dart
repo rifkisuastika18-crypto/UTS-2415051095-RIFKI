@@ -8,17 +8,34 @@ class TaskProvider extends ChangeNotifier {
 
   TaskProvider({required this.repository});
 
+  // State aplikasi
   List<TaskItem> _tasks = [];
   bool _isLoading = false;
   bool _isMutating = false;
   String? _errorMessage;
 
+  // Getter utama
   List<TaskItem> get tasks => _tasks;
   bool get isLoading => _isLoading;
   bool get isMutating => _isMutating;
   String? get errorMessage => _errorMessage;
 
-  // READ: Mengambil semua tugas
+  // Ringkasan tugas dari shared state
+  int get totalTasks => _tasks.length;
+
+  int get completedTasks {
+    return _tasks.where((task) => task.status == 'Selesai').length;
+  }
+
+  int get inProgressTasks {
+    return _tasks.where((task) => task.status == 'Dikerjakan').length;
+  }
+
+  int get pendingTasks {
+    return _tasks.where((task) => task.status == 'Belum selesai').length;
+  }
+
+  // READ: Mengambil semua tugas dari Supabase
   Future<void> fetchTasks() async {
     _isLoading = true;
     _errorMessage = null;
