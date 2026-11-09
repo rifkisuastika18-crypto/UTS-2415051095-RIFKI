@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/quote_provider.dart';
+import '../providers/task_provider.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/upcoming_task_card.dart';
-import '../providers/task_provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -18,7 +18,7 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
+              // HEADER
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -53,7 +53,7 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 28),
 
-              // Ringkasan tugas
+              // RINGKASAN TUGAS DARI SUPABASE
               const Text(
                 'Ringkasan Tugas',
                 style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
@@ -86,7 +86,9 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ],
                       ),
+
                       const SizedBox(height: 12),
+
                       Row(
                         children: [
                           Expanded(
@@ -113,31 +115,9 @@ class HomeScreen extends StatelessWidget {
                 },
               ),
 
-              const Row(
-                children: [
-                  Expanded(
-                    child: SummaryCard(
-                      title: 'Selesai',
-                      value: '7',
-                      icon: Icons.check_circle,
-                      color: Colors.green,
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: SummaryCard(
-                      title: 'Terlambat',
-                      value: '0',
-                      icon: Icons.warning,
-                      color: Colors.red,
-                    ),
-                  ),
-                ],
-              ),
-
               const SizedBox(height: 28),
 
-              // REST API: Motivasi Belajar
+              // MOTIVASI BELAJAR DARI REST API
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -157,7 +137,7 @@ class HomeScreen extends StatelessWidget {
 
               Consumer<QuoteProvider>(
                 builder: (context, provider, child) {
-                  // Loading state
+                  // LOADING STATE
                   if (provider.isLoading) {
                     return Container(
                       width: double.infinity,
@@ -176,7 +156,7 @@ class HomeScreen extends StatelessWidget {
                     );
                   }
 
-                  // Error state
+                  // ERROR STATE
                   if (provider.errorMessage != null) {
                     return Container(
                       width: double.infinity,
@@ -213,7 +193,7 @@ class HomeScreen extends StatelessWidget {
                     );
                   }
 
-                  // Empty state
+                  // EMPTY STATE
                   if (provider.quotes.isEmpty) {
                     return Container(
                       width: double.infinity,
@@ -229,7 +209,7 @@ class HomeScreen extends StatelessWidget {
                     );
                   }
 
-                  // Data berhasil dimuat dari API
+                  // DATA BERHASIL DIMUAT
                   final quote = provider.quotes.first;
 
                   return Container(
@@ -275,16 +255,16 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 28),
 
-              // Tugas terdekat
+              // TUGAS TERBARU DARI SUPABASE
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Tugas Terdekat',
+                    'Tugas Terbaru',
                     style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    'Minggu ini',
+                    '3 tugas terakhir',
                     style: TextStyle(
                       color: Colors.blue.shade700,
                       fontWeight: FontWeight.w600,
@@ -295,33 +275,113 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 15),
 
-              const UpcomingTaskCard(
-                title: 'Pemrograman Mobile',
-                description: 'Membuat aplikasi Flutter',
-                deadline: '10 November 2026',
-                status: 'Dikerjakan',
-                color: Colors.orange,
+              Consumer<TaskProvider>(
+                builder: (context, taskProvider, child) {
+                  // LOADING STATE
+                  if (taskProvider.isLoading && taskProvider.tasks.isEmpty) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(25),
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+
+                  // ERROR STATE
+                  if (taskProvider.errorMessage != null &&
+                      taskProvider.tasks.isEmpty) {
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 35,
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            'Gagal memuat tugas terbaru',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            taskProvider.errorMessage!,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
+                          ElevatedButton.icon(
+                            onPressed: taskProvider.fetchTasks,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Coba Lagi'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  // EMPTY STATE
+                  if (taskProvider.tasks.isEmpty) {
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(25),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Column(
+                        children: [
+                          Icon(
+                            Icons.assignment_outlined,
+                            size: 40,
+                            color: Colors.grey,
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            'Belum ada tugas terbaru.',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  // MENGAMBIL 3 TUGAS TERBARU
+                  final recentTasks = taskProvider.tasks.take(3).toList();
+
+                  return Column(
+                    children: recentTasks.map((task) {
+                      Color statusColor;
+
+                      if (task.status == 'Selesai') {
+                        statusColor = Colors.green;
+                      } else if (task.status == 'Dikerjakan') {
+                        statusColor = Colors.orange;
+                      } else {
+                        statusColor = Colors.blue;
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: UpcomingTaskCard(
+                          title: task.title,
+                          description: task.description,
+                          deadline: task.deadline,
+                          status: task.status,
+                          color: statusColor,
+                        ),
+                      );
+                    }).toList(),
+                  );
+                },
               ),
 
-              const SizedBox(height: 12),
-
-              const UpcomingTaskCard(
-                title: 'Kecerdasan Buatan',
-                description: 'Menyelesaikan laporan UTS',
-                deadline: '12 November 2026',
-                status: 'Belum selesai',
-                color: Colors.blue,
-              ),
-
-              const SizedBox(height: 12),
-
-              const UpcomingTaskCard(
-                title: 'Basis Data',
-                description: 'Membuat rancangan database',
-                deadline: '15 November 2026',
-                status: 'Dikerjakan',
-                color: Colors.orange,
-              ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
