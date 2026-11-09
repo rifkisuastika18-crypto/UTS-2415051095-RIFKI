@@ -113,14 +113,33 @@ lib/
 Screenshot aplikasi akan disimpan pada folder
 docs/screenshots/.
 
-- Home
-- Daftar Tugas
-- Detail Tugas
-- Tambah Tugas
-- Edit Tugas
-- Responsive Layout
-- Motivasi Belajar
-- Supabase Database
+-
+## Screenshot Aplikasi
+
+### Home / Dashboard
+![Home](docs/screenshots/home.png)
+
+### Daftar Tugas
+![Task List](docs/screenshots/task-list.png)
+
+### Detail Tugas
+![Task Detail](docs/screenshots/task-detail.png)
+
+### Tambah Tugas
+![Add Task](docs/screenshots/add-task.png)
+
+### Edit Tugas
+![Edit Task](docs/screenshots/edit-task.png)
+
+### Responsive Layout
+![Responsive Layout](docs/screenshots/responsive.png)
+
+### REST API
+![REST API](docs/screenshots/rest-api.png)
+
+### Supabase Database
+![Supabase Database](docs/screenshots/supabase-database.png)
+
 
 ## Repository
 https://github.com/rifkisuastika18-crypto/UTS-2415051095-RIFKI
