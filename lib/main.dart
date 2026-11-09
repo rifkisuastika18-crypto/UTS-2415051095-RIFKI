@@ -1,21 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'config/supabase_config.dart';
 
 import 'providers/quote_provider.dart';
+import 'providers/task_provider.dart';
+
 import 'repositories/quote_repository.dart';
+import 'repositories/task_repository.dart';
+
 import 'services/quote_service.dart';
+import 'services/task_service.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/task_list_screen.dart';
 import 'screens/add_task_screen.dart';
 import 'screens/profile_screen.dart';
 
-void main() {
-  final repository = QuoteRepository(quoteService: QuoteService());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Inisialisasi Supabase
+  await Supabase.initialize(
+    url: SupabaseConfig.supabaseUrl,
+    publishableKey: SupabaseConfig.supabasePublishableKey,
+  );
+
+  final supabase = Supabase.instance.client;
+
+  // Login anonim jika belum memiliki sesi
+  if (supabase.auth.currentSession == null) {
+    await supabase.auth.signInAnonymously();
+  }
+
+  // Repository REST API
+  final quoteRepository = QuoteRepository(quoteService: QuoteService());
+
+  // Repository Database
+  final taskRepository = TaskRepository(taskService: TaskService());
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => QuoteProvider(repository: repository)..fetchQuotes(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<QuoteProvider>(
+          create: (_) =>
+              QuoteProvider(repository: quoteRepository)..fetchQuotes(),
+        ),
+
+        ChangeNotifierProvider<TaskProvider>(
+          create: (_) => TaskProvider(repository: taskRepository)..fetchTasks(),
+        ),
+      ],
       child: const TaskMateApp(),
     ),
   );

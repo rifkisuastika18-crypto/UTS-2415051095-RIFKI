@@ -5,8 +5,14 @@ import '../models/task_item.dart';
 class TaskCard extends StatelessWidget {
   final TaskItem task;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
 
-  const TaskCard({super.key, required this.task, required this.onTap});
+  const TaskCard({
+    super.key,
+    required this.task,
+    required this.onTap,
+    this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +35,18 @@ class TaskCard extends StatelessWidget {
           ),
         ),
         isThreeLine: true,
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (onDelete != null)
+              IconButton(
+                tooltip: 'Hapus tugas',
+                onPressed: onDelete,
+                icon: const Icon(Icons.delete_outline, color: Colors.red),
+              ),
+            const Icon(Icons.arrow_forward_ios, size: 16),
+          ],
+        ),
         onTap: onTap,
       ),
     );
