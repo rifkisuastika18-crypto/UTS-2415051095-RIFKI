@@ -21,40 +21,56 @@ import 'screens/profile_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inisialisasi Supabase
+  // Inisialisasi Supabase.
   await Supabase.initialize(
     url: SupabaseConfig.supabaseUrl,
     publishableKey: SupabaseConfig.supabasePublishableKey,
   );
 
-  final supabase = Supabase.instance.client;
-
-  // Login anonim jika belum memiliki sesi
-  if (supabase.auth.currentSession == null) {
-    await supabase.auth.signInAnonymously();
-  }
-
-  // Repository REST API
+  // Repository REST API.
   final quoteRepository = QuoteRepository(quoteService: QuoteService());
 
-  // Repository Database
+  // Repository database.
   final taskRepository = TaskRepository(taskService: TaskService());
 
+  // Buat Provider sebelum aplikasi dijalankan.
+  final quoteProvider = QuoteProvider(repository: quoteRepository);
+
+  final taskProvider = TaskProvider(repository: taskRepository);
+
+  // Tampilkan aplikasi terlebih dahulu.
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<QuoteProvider>(
-          create: (_) =>
-              QuoteProvider(repository: quoteRepository)..fetchQuotes(),
-        ),
-
-        ChangeNotifierProvider<TaskProvider>(
-          create: (_) => TaskProvider(repository: taskRepository)..fetchTasks(),
-        ),
+        ChangeNotifierProvider<QuoteProvider>.value(value: quoteProvider),
+        ChangeNotifierProvider<TaskProvider>.value(value: taskProvider),
       ],
       child: const TaskMateApp(),
     ),
   );
+
+  // Jalankan proses login setelah aplikasi tampil.
+  quoteProvider.fetchQuotes();
+  initializeAuth(taskProvider);
+}
+
+// Login Supabase dilakukan di latar belakang.
+Future<void> initializeAuth(TaskProvider taskProvider) async {
+  try {
+    final supabase = Supabase.instance.client;
+
+    if (supabase.auth.currentSession == null) {
+      await supabase.auth.signInAnonymously();
+    }
+
+    // Ambil data tugas setelah login berhasil.
+    await taskProvider.fetchTasks();
+
+    debugPrint('Supabase berhasil terhubung.');
+  } catch (error) {
+    debugPrint('Koneksi Supabase gagal: $error');
+    debugPrint('TaskMate tetap dapat dibuka.');
+  }
 }
 
 class TaskMateApp extends StatelessWidget {
