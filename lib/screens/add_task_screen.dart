@@ -28,6 +28,48 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     super.dispose();
   }
 
+  // Mengubah nomor bulan menjadi nama bulan Indonesia
+  String _getMonthName(int month) {
+    const months = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+
+    return months[month - 1];
+  }
+
+  // Menampilkan kalender untuk memilih deadline
+  Future<void> _selectDeadline() async {
+    final now = DateTime.now();
+
+    final selectedDate = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: DateTime(2035),
+      helpText: 'Pilih Deadline Tugas',
+      cancelText: 'Batal',
+      confirmText: 'Pilih',
+    );
+
+    if (selectedDate != null) {
+      setState(() {
+        deadlineController.text =
+            '${selectedDate.day} ${_getMonthName(selectedDate.month)} ${selectedDate.year}';
+      });
+    }
+  }
+
   // CREATE: Simpan tugas ke Supabase
   Future<void> saveTask() async {
     if (!_formKey.currentState!.validate()) {
@@ -109,7 +151,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
                   const SizedBox(height: 16),
 
-                  // Deskripsi
+                  // Deskripsi tugas
                   TextFormField(
                     controller: descriptionController,
                     maxLines: 3,
@@ -128,18 +170,21 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
                   const SizedBox(height: 16),
 
-                  // Deadline
+                  // Deadline dengan kalender
                   TextFormField(
                     controller: deadlineController,
+                    readOnly: true,
+                    onTap: _selectDeadline,
                     decoration: const InputDecoration(
                       labelText: 'Deadline',
-                      hintText: 'Contoh: 20 November 2026',
+                      hintText: 'Pilih tanggal deadline',
                       prefixIcon: Icon(Icons.calendar_today),
+                      suffixIcon: Icon(Icons.arrow_drop_down),
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Deadline harus diisi';
+                        return 'Deadline harus dipilih';
                       }
                       return null;
                     },

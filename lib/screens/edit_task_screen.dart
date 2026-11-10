@@ -24,13 +24,10 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
   void initState() {
     super.initState();
 
-    // Mengisi form dengan data tugas sebelumnya
     titleController = TextEditingController(text: widget.task.title);
-
     descriptionController = TextEditingController(
       text: widget.task.description,
     );
-
     deadlineController = TextEditingController(text: widget.task.deadline);
 
     selectedStatus = widget.task.status;
@@ -44,16 +41,53 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     super.dispose();
   }
 
-  // VALIDASI: Memeriksa input wajib
   String? validateRequired(String? value, String fieldName) {
     if (value == null || value.trim().isEmpty) {
       return '$fieldName wajib diisi';
     }
-
     return null;
   }
 
-  // UPDATE: Menyimpan perubahan tugas
+  String _getMonthName(int month) {
+    const months = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+
+    return months[month - 1];
+  }
+
+  Future<void> _selectDeadline() async {
+    final now = DateTime.now();
+
+    final selectedDate = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: DateTime(2035, 12, 31),
+      helpText: 'Pilih Deadline Tugas',
+      cancelText: 'BATAL',
+      confirmText: 'PILIH',
+    );
+
+    if (selectedDate != null) {
+      setState(() {
+        deadlineController.text =
+            '${selectedDate.day} ${_getMonthName(selectedDate.month)} ${selectedDate.year}';
+      });
+    }
+  }
+
   void saveTask() {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -86,7 +120,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Nama tugas
               TextFormField(
                 controller: titleController,
                 decoration: const InputDecoration(
@@ -94,14 +127,11 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                   prefixIcon: Icon(Icons.assignment),
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  return validateRequired(value, 'Nama tugas');
-                },
+                validator: (value) => validateRequired(value, 'Nama tugas'),
               ),
 
               const SizedBox(height: 16),
 
-              // Deskripsi tugas
               TextFormField(
                 controller: descriptionController,
                 maxLines: 3,
@@ -110,30 +140,27 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                   prefixIcon: Icon(Icons.description),
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  return validateRequired(value, 'Deskripsi');
-                },
+                validator: (value) => validateRequired(value, 'Deskripsi'),
               ),
 
               const SizedBox(height: 16),
 
-              // Deadline
               TextFormField(
                 controller: deadlineController,
+                readOnly: true,
+                onTap: _selectDeadline,
                 decoration: const InputDecoration(
                   labelText: 'Deadline',
-                  hintText: 'Contoh: 20 November 2026',
+                  hintText: 'Pilih tanggal deadline',
                   prefixIcon: Icon(Icons.calendar_today),
+                  suffixIcon: Icon(Icons.arrow_drop_down),
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  return validateRequired(value, 'Deadline');
-                },
+                validator: (value) => validateRequired(value, 'Deadline'),
               ),
 
               const SizedBox(height: 16),
 
-              // Status tugas
               DropdownButtonFormField<String>(
                 initialValue: selectedStatus,
                 decoration: const InputDecoration(
@@ -169,7 +196,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
 
               const SizedBox(height: 25),
 
-              // Tombol simpan perubahan
               SizedBox(
                 height: 50,
                 child: ElevatedButton.icon(
@@ -184,13 +210,10 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
 
               const SizedBox(height: 12),
 
-              // Tombol batal
               SizedBox(
                 height: 48,
                 child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  onPressed: () => Navigator.pop(context),
                   child: const Text('Batal'),
                 ),
               ),
