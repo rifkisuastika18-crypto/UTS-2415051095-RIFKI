@@ -4,12 +4,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/supabase_config.dart';
 
+import 'providers/auth_provider.dart';
 import 'providers/quote_provider.dart';
 import 'providers/task_provider.dart';
 
+import 'repositories/auth_repository.dart';
 import 'repositories/quote_repository.dart';
 import 'repositories/task_repository.dart';
 
+import 'services/auth_service.dart';
 import 'services/quote_service.dart';
 import 'services/task_service.dart';
 
@@ -17,31 +20,32 @@ import 'screens/home_screen.dart';
 import 'screens/task_list_screen.dart';
 import 'screens/add_task_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/login_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inisialisasi Supabase.
   await Supabase.initialize(
     url: SupabaseConfig.supabaseUrl,
     publishableKey: SupabaseConfig.supabasePublishableKey,
   );
 
-  // Repository REST API.
+  final authRepository = AuthRepository(authService: AuthService());
+
   final quoteRepository = QuoteRepository(quoteService: QuoteService());
 
-  // Repository database.
   final taskRepository = TaskRepository(taskService: TaskService());
 
-  // Buat Provider sebelum aplikasi dijalankan.
+  final authProvider = AuthProvider(authRepository: authRepository);
+
   final quoteProvider = QuoteProvider(repository: quoteRepository);
 
   final taskProvider = TaskProvider(repository: taskRepository);
 
-  // Tampilkan aplikasi terlebih dahulu.
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
         ChangeNotifierProvider<QuoteProvider>.value(value: quoteProvider),
         ChangeNotifierProvider<TaskProvider>.value(value: taskProvider),
       ],
@@ -49,28 +53,7 @@ Future<void> main() async {
     ),
   );
 
-  // Jalankan proses login setelah aplikasi tampil.
   quoteProvider.fetchQuotes();
-  initializeAuth(taskProvider);
-}
-
-// Login Supabase dilakukan di latar belakang.
-Future<void> initializeAuth(TaskProvider taskProvider) async {
-  try {
-    final supabase = Supabase.instance.client;
-
-    if (supabase.auth.currentSession == null) {
-      await supabase.auth.signInAnonymously();
-    }
-
-    // Ambil data tugas setelah login berhasil.
-    await taskProvider.fetchTasks();
-
-    debugPrint('Supabase berhasil terhubung.');
-  } catch (error) {
-    debugPrint('Koneksi Supabase gagal: $error');
-    debugPrint('TaskMate tetap dapat dibuka.');
-  }
 }
 
 class TaskMateApp extends StatelessWidget {
@@ -86,8 +69,41 @@ class TaskMateApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2878D0)),
         scaffoldBackgroundColor: const Color(0xFFF5F7FB),
       ),
-      home: const MainNavigation(),
+      home: const AuthGate(),
     );
+  }
+}
+
+class AuthGate extends StatefulWidget {
+  const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _tasksLoaded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+
+    if (!authProvider.isLoggedIn) {
+      _tasksLoaded = false;
+      return const LoginScreen();
+    }
+
+    if (!_tasksLoaded) {
+      _tasksLoaded = true;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<TaskProvider>().fetchTasks();
+        }
+      });
+    }
+
+    return const MainNavigation();
   }
 }
 
