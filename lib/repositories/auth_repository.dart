@@ -1,4 +1,3 @@
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/auth_service.dart';
@@ -12,10 +11,12 @@ class AuthRepository {
   Future<AuthResponse> register({
     required String email,
     required String password,
+    required String name,
   }) async {
     return await authService.register(
       email: email,
       password: password,
+      name: name,
     );
   }
 
@@ -24,10 +25,7 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
-    return await authService.login(
-      email: email,
-      password: password,
-    );
+    return await authService.login(email: email, password: password);
   }
 
   // LOGOUT
@@ -39,6 +37,10 @@ class AuthRepository {
   User? get currentUser => authService.currentUser;
 
   // PERUBAHAN SESSION
-  Stream<AuthState> get authStateChanges =>
-      authService.authStateChanges;
+  Stream<AuthState> get authStateChanges => authService.authStateChanges;
+
+  // MENGAMBIL PROFIL PENGGUNA
+  Future<Map<String, dynamic>?> getProfile() async {
+    return await authService.getProfile();
+  }
 }

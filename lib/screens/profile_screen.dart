@@ -3,9 +3,39 @@ import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool _profileRequested = false;
+  bool _isProfileLoading = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (!_profileRequested) {
+      _profileRequested = true;
+      _loadProfile();
+    }
+  }
+
+  // MEMUAT PROFIL PENGGUNA
+  Future<void> _loadProfile() async {
+    await context.read<AuthProvider>().loadProfile();
+
+    if (mounted) {
+      setState(() {
+        _isProfileLoading = false;
+      });
+    }
+  }
+
+  // LOGOUT
   Future<void> _logout(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -43,7 +73,17 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+
+    // DATA PENGGUNA
     final email = authProvider.currentUser?.email ?? 'Tidak tersedia';
+
+    final name = _isProfileLoading
+        ? 'Memuat...'
+        : authProvider.profile?['name']?.toString() ?? 'Tidak tersedia';
+
+    final role = _isProfileLoading
+        ? 'Memuat...'
+        : authProvider.profile?['role']?.toString() ?? 'Tidak tersedia';
 
     return Scaffold(
       appBar: AppBar(
@@ -62,19 +102,39 @@ class ProfileScreen extends StatelessWidget {
                 backgroundColor: Color(0xFF2878D0),
                 child: Icon(Icons.person, size: 60, color: Colors.white),
               ),
+
               const SizedBox(height: 20),
-              const Text(
-                'Mahasiswa TaskMate',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+
+              // NAMA PENGGUNA
+              Text(
+                name,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
+
               const SizedBox(height: 8),
+
               const Text(
                 'Aplikasi Manajemen Tugas Kuliah',
                 style: TextStyle(color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
+
               const SizedBox(height: 25),
 
+              // NAMA
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.person_outline),
+                  title: const Text('Nama Pengguna'),
+                  subtitle: Text(name),
+                ),
+              ),
+
+              // EMAIL
               Card(
                 child: ListTile(
                   leading: const Icon(Icons.email_outlined),
@@ -82,13 +142,17 @@ class ProfileScreen extends StatelessWidget {
                   subtitle: Text(email),
                 ),
               ),
-              const Card(
+
+              // ROLE
+              Card(
                 child: ListTile(
-                  leading: Icon(Icons.school),
-                  title: Text('Status'),
-                  subtitle: Text('Mahasiswa'),
+                  leading: const Icon(Icons.admin_panel_settings),
+                  title: const Text('Role Pengguna'),
+                  subtitle: Text(role),
                 ),
               ),
+
+              // TENTANG APLIKASI
               const Card(
                 child: ListTile(
                   leading: Icon(Icons.info_outline),
@@ -98,6 +162,8 @@ class ProfileScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 30),
+
+              // TOMBOL LOGOUT
               SizedBox(
                 width: double.infinity,
                 height: 50,
