@@ -8,7 +8,7 @@ class TaskService {
   TaskService({SupabaseClient? client})
     : supabase = client ?? Supabase.instance.client;
 
-  // Memastikan pengguna sudah memiliki sesi login
+  // Memastikan pengguna sudah login
   String get currentUserId {
     final user = supabase.auth.currentUser;
 
@@ -19,18 +19,17 @@ class TaskService {
     return user.id;
   }
 
-  // READ: Mengambil daftar tugas dari database
+  // READ: RLS menentukan tugas yang boleh dilihat
   Future<List<TaskItem>> fetchTasks() async {
     final data = await supabase
         .from('tasks')
         .select()
-        .eq('user_id', currentUserId)
         .order('created_at', ascending: false);
 
     return data.map((item) => TaskItem.fromJson(item)).toList();
   }
 
-  // CREATE: Menambahkan tugas baru
+  // CREATE: Tugas baru dimiliki pengguna yang login
   Future<void> addTask(TaskItem task) async {
     await supabase.from('tasks').insert({
       'user_id': currentUserId,
@@ -41,13 +40,13 @@ class TaskService {
     });
   }
 
-  // UPDATE: Mengubah tugas
+  // UPDATE: RLS menentukan apakah pengguna berhak mengubah tugas
   Future<void> updateTask(TaskItem task) async {
     if (task.id == null) {
       throw Exception('ID tugas tidak ditemukan.');
     }
 
-    await supabase
+    final result = await supabase
         .from('tasks')
         .update({
           'title': task.title,
@@ -56,15 +55,19 @@ class TaskService {
           'status': task.status,
         })
         .eq('id', task.id!)
-        .eq('user_id', currentUserId);
+        .select();
+
+    if (result.isEmpty) {
+      throw Exception('Tidak memiliki izin untuk mengubah tugas ini.');
+    }
   }
 
-  // DELETE: Menghapus tugas
+  // DELETE: RLS menentukan apakah pengguna berhak menghapus tugas
   Future<void> deleteTask(String id) async {
-    await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', currentUserId);
+    final result = await supabase.from('tasks').delete().eq('id', id).select();
+
+    if (result.isEmpty) {
+      throw Exception('Tidak memiliki izin untuk menghapus tugas ini.');
+    }
   }
 }
