@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../providers/auth_provider.dart';
 import '../providers/quote_provider.dart';
 import '../providers/task_provider.dart';
+import '../widgets/role_guard.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/upcoming_task_card.dart';
 
@@ -11,6 +13,9 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final userRole = authProvider.profile?['role'] as String?;
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -26,7 +31,7 @@ class HomeScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Halo, Mahasiswa! 👋',
+                        'Halo, Mahasiswa!',
                         style: TextStyle(
                           fontSize: 23,
                           fontWeight: FontWeight.bold,
@@ -52,8 +57,71 @@ class HomeScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 28),
+              // MENU KHUSUS OWNER
+              RoleGuard(
+                role: userRole,
+                allowed: const ['owner'],
+                child: Card(
+                  color: Colors.orange.shade50,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.business_center,
+                      color: Colors.orange,
+                      size: 32,
+                    ),
+                    title: const Text(
+                      'Dashboard Owner',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: const Text('Menu khusus untuk pemilik TaskMate'),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Dashboard Owner TaskMate'),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
 
-              // RINGKASAN TUGAS DARI SUPABASE
+              // MENU KHUSUS ADMIN
+              RoleGuard(
+                role: userRole,
+                allowed: const ['admin'],
+                child: Card(
+                  color: Colors.blue.shade50,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.admin_panel_settings,
+                      color: Colors.blue,
+                      size: 32,
+                    ),
+                    title: const Text(
+                      'Kelola Pengguna (Admin)',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: const Text(
+                      'Fitur khusus untuk administrator TaskMate',
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Menu pengelolaan pengguna khusus admin.',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+              // RINGKASAN TUGAS
               const Text(
                 'Ringkasan Tugas',
                 style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
@@ -86,9 +154,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 12),
-
                       Row(
                         children: [
                           Expanded(
@@ -137,7 +203,6 @@ class HomeScreen extends StatelessWidget {
 
               Consumer<QuoteProvider>(
                 builder: (context, provider, child) {
-                  // LOADING STATE
                   if (provider.isLoading) {
                     return Container(
                       width: double.infinity,
@@ -156,7 +221,6 @@ class HomeScreen extends StatelessWidget {
                     );
                   }
 
-                  // ERROR STATE
                   if (provider.errorMessage != null) {
                     return Container(
                       width: double.infinity,
@@ -193,7 +257,6 @@ class HomeScreen extends StatelessWidget {
                     );
                   }
 
-                  // EMPTY STATE
                   if (provider.quotes.isEmpty) {
                     return Container(
                       width: double.infinity,
@@ -209,7 +272,6 @@ class HomeScreen extends StatelessWidget {
                     );
                   }
 
-                  // DATA BERHASIL DIMUAT
                   final quote = provider.quotes.first;
 
                   return Container(
@@ -240,7 +302,7 @@ class HomeScreen extends StatelessWidget {
                         Align(
                           alignment: Alignment.centerRight,
                           child: Text(
-                            '— ${quote.author}',
+                            '- ${quote.author}',
                             style: const TextStyle(
                               color: Colors.blue,
                               fontWeight: FontWeight.bold,
@@ -277,7 +339,6 @@ class HomeScreen extends StatelessWidget {
 
               Consumer<TaskProvider>(
                 builder: (context, taskProvider, child) {
-                  // LOADING STATE
                   if (taskProvider.isLoading && taskProvider.tasks.isEmpty) {
                     return const Center(
                       child: Padding(
@@ -287,7 +348,6 @@ class HomeScreen extends StatelessWidget {
                     );
                   }
 
-                  // ERROR STATE
                   if (taskProvider.errorMessage != null &&
                       taskProvider.tasks.isEmpty) {
                     return Container(
@@ -325,7 +385,6 @@ class HomeScreen extends StatelessWidget {
                     );
                   }
 
-                  // EMPTY STATE
                   if (taskProvider.tasks.isEmpty) {
                     return Container(
                       width: double.infinity,
@@ -351,7 +410,6 @@ class HomeScreen extends StatelessWidget {
                     );
                   }
 
-                  // MENGAMBIL 3 TUGAS TERBARU
                   final recentTasks = taskProvider.tasks.take(3).toList();
 
                   return Column(

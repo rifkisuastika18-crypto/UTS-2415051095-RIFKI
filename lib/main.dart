@@ -31,15 +31,11 @@ Future<void> main() async {
   );
 
   final authRepository = AuthRepository(authService: AuthService());
-
   final quoteRepository = QuoteRepository(quoteService: QuoteService());
-
   final taskRepository = TaskRepository(taskService: TaskService());
 
   final authProvider = AuthProvider(authRepository: authRepository);
-
   final quoteProvider = QuoteProvider(repository: quoteRepository);
-
   final taskProvider = TaskProvider(repository: taskRepository);
 
   runApp(
@@ -83,6 +79,7 @@ class AuthGate extends StatefulWidget {
 
 class _AuthGateState extends State<AuthGate> {
   bool _tasksLoaded = false;
+  bool _profileLoaded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +87,18 @@ class _AuthGateState extends State<AuthGate> {
 
     if (!authProvider.isLoggedIn) {
       _tasksLoaded = false;
+      _profileLoaded = false;
       return const LoginScreen();
+    }
+
+    if (!_profileLoaded) {
+      _profileLoaded = true;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<AuthProvider>().loadProfile();
+        }
+      });
     }
 
     if (!_tasksLoaded) {
