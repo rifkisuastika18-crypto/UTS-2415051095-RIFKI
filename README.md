@@ -140,6 +140,27 @@ docs/screenshots/.
 ### Supabase Database
 ![Supabase Database](docs/screenshots/supabase-database.png)
 
+## Pengujian Keamanan RLS
+
+Pengujian dilakukan menggunakan dua akun dengan role User untuk
+memastikan bahwa setiap pengguna hanya dapat mengelola tugas
+sesuai hak aksesnya.
+
+Hasil pengujian:
+
+1. User A dapat melihat tugas miliknya sendiri (Allowed).
+2. User A dapat mengubah tugas miliknya sendiri (Allowed).
+3. User B hanya dapat melihat tugas yang diizinkan untuk akunnya (Allowed).
+4. User B tidak dapat mengubah tugas milik User A (Denied).
+5. User B tidak dapat menghapus tugas milik User A (Denied).
+
+Pengujian membuktikan bahwa Row Level Security (RLS) pada database
+Supabase dapat membatasi akses pengguna terhadap data milik pengguna lain.
+
+Jika authorization hanya diterapkan pada UI tanpa perlindungan database,
+pengguna berpotensi melewati pembatasan tampilan dan mengakses data
+melalui API atau permintaan database secara langsung. Oleh karena itu,
+RLS diperlukan untuk memastikan hak akses diperiksa langsung pada database.
 
 ## Repository
 https://github.com/rifkisuastika18-crypto/UTS-2415051095-RIFKI
