@@ -1,7 +1,10 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'firebase_options.dart';
 import 'config/supabase_config.dart';
 
 import 'providers/auth_provider.dart';
@@ -15,6 +18,7 @@ import 'repositories/task_repository.dart';
 import 'services/auth_service.dart';
 import 'services/quote_service.dart';
 import 'services/task_service.dart';
+import 'services/notification_service.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/task_list_screen.dart';
@@ -25,17 +29,24 @@ import 'screens/login_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
   await Supabase.initialize(
     url: SupabaseConfig.supabaseUrl,
     publishableKey: SupabaseConfig.supabasePublishableKey,
   );
 
   final authRepository = AuthRepository(authService: AuthService());
+
   final quoteRepository = QuoteRepository(quoteService: QuoteService());
+
   final taskRepository = TaskRepository(taskService: TaskService());
 
   final authProvider = AuthProvider(authRepository: authRepository);
+
   final quoteProvider = QuoteProvider(repository: quoteRepository);
+
   final taskProvider = TaskProvider(repository: taskRepository);
 
   runApp(
@@ -131,6 +142,30 @@ class _MainNavigationState extends State<MainNavigation> {
     AddTaskScreen(),
     ProfileScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _requestNotificationPermission();
+  }
+
+  Future<void> _requestNotificationPermission() async {
+    try {
+      final status = await NotificationService.instance.requestPermission();
+
+      debugPrint('Status izin notifikasi TaskMate: ${status.name}');
+
+      final token = await NotificationService.instance.getToken();
+
+      if (token != null) {
+        debugPrint('FCM Token berhasil diperoleh di perangkat');
+      }
+
+      await NotificationService.instance.init();
+    } catch (e) {
+      debugPrint('Gagal menginisialisasi notifikasi: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
